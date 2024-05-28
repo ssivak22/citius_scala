@@ -1,0 +1,37 @@
+import org.apache.spark.sql.{SparkSession, DataFrame}
+import org.apache.spark.sql.functions._
+
+// Creating a SparkSession
+val spark = SparkSession.builder().appName("VisitCountPerProvider").getOrCreate()
+
+// splitting the data from given providers csv raw data
+val line = "provider_id|provider_specialty|first_name|middle_name|last_name"
+val Array(provider_id, provider_specialty, first_name, middle_name, last_name) = line.split("\\|")
+
+// Writting the splitted column values into new excel sheet as below
+val line = "prvoutput.csv"
+df.write.option("header", "true").csv("/d:/test/prvoutput.csv)
+
+// I am reading the output providers data from a csv/excel file as providersDF
+val providersDF = spark.read.option("header", "true").csv("/d:/test/prvoutput.csv")
+
+// I am reading given visits data from a csv/excel file as visitsDF
+val visitsDF = spark.read.option("header", "true").csv("/d:/test/visits.csv")
+
+// Joining the above 2 dataframes to get provider details with visit information (Inner Join operation performed using the provider_id column)
+val joinedDF = providersDF.join(visitsDF, Seq("provider_id"))
+
+// After joining the 2 datasets i am grouping the values by provider ID, name, and specialty, summing up the number of visits
+val totalVisitsDF = joinedDF.groupBy("provider_id", "provider_name", "specialty").agg(count("*").alias("total_visits"))
+
+// Converting the above DataFrame into JSON format which partitioned by specialty as per problem request
+val jsonResult = totalVisitsDF
+  .select( "provider_id", "provider_name", "specialty", "total_visits")
+  .toJSON ----> (Convert Dataframes into JSON format)
+  .collect() ----> (action we called here, collect the result as an array)
+  .mkString("\n") ---->(Concatenates all the array result into strings separated by '\n')
+
+println(jsonResult) ----> (Print the output from jsonResult dataframe)
+
+// Stop the SparkSession
+spark.stop()
