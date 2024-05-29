@@ -1,10 +1,13 @@
-import org.apache.spark.sql.{SparkSession, DataFrame}
-import org.apache.spark.sql.functions
+import org.apache.spark.sql.sparksession
+import org.apache.spark.sql.functions._
+import org.apache.commons.io.FileUtils
+import java.sql.DriverManager
 
-// Creating a SparkSession
-val spark = SparkSession.builder().appName("VisitCountPerProvider").getOrCreate()
 
-// splitting the data from given providers csv raw data
+//Creating a SparkSession
+val spark = sparksession.builder().appName("VisitCountPerProvider").getOrCreate()
+
+//splitting the data from given providers csv raw data
 val line = "provider_id|provider_specialty|first_name|middle_name|last_name"
 val Array(provider_id, provider_specialty, first_name, middle_name, last_name) = line.split("|")
 
@@ -30,11 +33,11 @@ val totalVisitsDF = joinedDF.groupBy("provider_id", "provider_name", "specialty"
 // Converting the above DataFrame into JSON format which partitioned by specialty as per problem request
 val jsonResult = totalVisitsDF
   .select( "provider_id", "provider_name", "specialty", "total_visits")
-  .toJSON ----> (Convert Dataframes into JSON format)
-  .collect() ----> (action we called here, collect the result as an array)
-  .mkString("\n") ---->(Concatenates all the array result into strings separated by '\n')
+  .toJSON 
+  .collect() 
+  .mkString("\n") 
 
-println(jsonResult) ----> (Print the output from jsonResult dataframe)
+println(jsonResult) 
 
 // Stop the SparkSession
 spark.stop()
