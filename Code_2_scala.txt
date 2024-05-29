@@ -1,0 +1,33 @@
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+
+// Create a SparkSession
+val spark = SparkSession.builder().appName("VisitsPerProviderPerMonth").getOrCreate()
+
+// I am reading the output providers data from a csv/excel file as providersDF
+val providersDF = spark.read.option("header", "true").csv("/d:/test/prvoutput.csv").select("provider_id", "provider_specialty")
+
+// I am reading given visits data from a csv/excel file as visitsDF
+val visitsDF = spark.read.option("header", "true").csv("/d:/test/visits.csv").select("provider_id", "date_of_service")
+
+// Here I am converting date_of_service column as a new column named as month
+val visitsWithMonthDF = visitsDF.withColumn("month", date_format(col("date_of_service"), "yyyy-MM"))
+
+// Joining the both dataframes like providersDF and visitsWithMonthDF to get provider data with specialties
+val joinedDF = providersDF.join(visitsWithMonthDF, "provider_id")
+
+// Here group by provider ID and month, count visits which we calculated group by value
+val visitsPerProviderPerMonthDF = joinedDF.groupBy("provider_id", "month")
+  .agg(count("*") -----> Count function to each group to Counting the number of rows 
+  .alias("total_visits")) -----> storing the count of group values as Total visits
+
+// Convert DataFrame to JSON format
+val jsonResult = visitsPerProviderPerMonthDF
+.toJSON ----> (Convert Dataframes into JSON format)
+.collect() ----> (Action we called here, collect the result as an array)
+.mkString("\n") ---->(Concatenates all the array result into strings separated by '\n')
+
+println(jsonResult)
+
+// Stop the SparkSession
+spark.stop()
