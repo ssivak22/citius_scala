@@ -1,21 +1,25 @@
 import org.apache.spark.sql.{SparkSession, DataFrame}
+import org.apache.spark.sql.functions
 
 // Creating a SparkSession
 val spark = SparkSession.builder().appName("VisitCountPerProvider").getOrCreate()
 
 // splitting the data from given providers csv raw data
 val line = "provider_id|provider_specialty|first_name|middle_name|last_name"
-val Array(provider_id, provider_specialty, first_name, middle_name, last_name) = line.split("\\|")
+val Array(provider_id, provider_specialty, first_name, middle_name, last_name) = line.split("|")
 
 // Writting the splitted column values into new excel sheet as below
-val line = "C:\Users\garun\OneDrive\Desktop\ssivak22_Git\citius_scala\prvoutput.csv"
-df.write.option("header", "true").csv("C:\Users\garun\OneDrive\Desktop\ssivak22_Git\citius_scala\prvoutput.csv")
+val line = "C:/Users/garun/OneDrive/Desktop/ssivak22_Git/citius_scala/prvoutput.csv"
+df.write
+.format(csv)
+.option("header", "true")
+.save ("line")
 
 // I am reading the output providers data from a csv/excel file as providersDF
-val providersDF = spark.read.option("header", "true").csv("C:\Users\garun\OneDrive\Desktop\ssivak22_Git\citius_scala\prvoutput.csv")
+val providersDF = spark.read.option("header", "true").csv("C:/Users/garun/OneDrive/Desktop/ssivak22_Git/citius_scala/prvoutput.csv")
 
 // I am reading given visits data from a csv/excel file as visitsDF
-val visitsDF = spark.read.option("header", "true").csv("C:\Users\garun\OneDrive\Desktop\ssivak22_Git\citius_scala\visits.csv")
+val visitsDF = spark.read.option("header", "true").csv("C:/Users/garun/OneDrive/Desktop/ssivak22_Git/citius_scala/visits.csv")
 
 // Joining the above 2 dataframes to get provider details with visit information (Inner Join operation performed using the provider_id column)
 val joinedDF = providersDF.join(visitsDF, Seq("provider_id"))
